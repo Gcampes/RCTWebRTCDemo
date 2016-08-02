@@ -1,3 +1,4 @@
+
 'use strict';
 
 import React, { Component } from 'react';
@@ -11,10 +12,9 @@ import {
   ListView,
 } from 'react-native';
 
-import App from './app/components/App';
-import io from 'socket.io-client/socket.io';
+import io from 'react-native-socketio';
 
-const socket = io.connect('https://react-native-webrtc.herokuapp.com', {transports: ['websocket']});
+const socket = io('https://react-native-webrtc.herokuapp.com');
 
 import {
   RTCPeerConnection,
@@ -219,7 +219,7 @@ function mapHash(hash, func) {
 
 function getStats() {
   const pc = pcPeers[Object.keys(pcPeers)[0]];
-  if (pc.getRemoteStreams && pc.getRemoteStreams()[0] && pc.getRemoteStreams()[0].getAudioTracks()[0]) {
+  if (pc.getRemoteStreams()[0] && pc.getRemoteStreams()[0].getAudioTracks()[0]) {
     const track = pc.getRemoteStreams()[0].getAudioTracks()[0];
     console.log('track', track);
     pc.getStats(track, function(report) {
@@ -230,8 +230,9 @@ function getStats() {
 
 let container;
 
-const RCTWebRTCDemo = React.createClass({
-  getInitialState: function() {
+class WebRTC extends Component {
+  getInitialState() {
+    console.log('something');
     this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => true});
     return {
       info: 'Initializing',
@@ -244,15 +245,15 @@ const RCTWebRTCDemo = React.createClass({
       textRoomData: [],
       textRoomValue: '',
     };
-  },
-  componentDidMount: function() {
+  }
+  componentDidMount() {
     container = this;
-  },
+  }
   _press(event) {
     this.refs.roomID.blur();
     this.setState({status: 'connect', info: 'Connecting'});
     join(this.state.roomID);
-  },
+  }
   _switchVideoType() {
     const isFront = !this.state.isFront;
     this.setState({isFront});
@@ -272,12 +273,12 @@ const RCTWebRTCDemo = React.createClass({
         pc && pc.addStream(localStream);
       }
     });
-  },
+  }
   receiveTextData(data) {
     const textRoomData = this.state.textRoomData.slice();
     textRoomData.push(data);
     this.setState({textRoomData, textRoomValue: ''});
-  },
+  }
   _textRoomPress() {
     if (!this.state.textRoomValue) {
       return
@@ -289,7 +290,7 @@ const RCTWebRTCDemo = React.createClass({
       pc.textDataChannel.send(this.state.textRoomValue);
     }
     this.setState({textRoomData, textRoomValue: ''});
-  },
+  }
   _renderTextRoom() {
     return (
       <View style={styles.listViewContainer}>
@@ -308,13 +309,10 @@ const RCTWebRTCDemo = React.createClass({
         </TouchableHighlight>
       </View>
     );
-  },
+  }
   render() {
-
-    console.log('src', this.state.selfViewSrc);
     return (
       <View style={styles.container}>
-        <App />
         <Text style={styles.welcome}>
           {this.state.info}
         </Text>
@@ -353,7 +351,7 @@ const RCTWebRTCDemo = React.createClass({
       </View>
     );
   }
-});
+}
 
 const styles = StyleSheet.create({
   selfView: {
@@ -379,4 +377,4 @@ const styles = StyleSheet.create({
   },
 });
 
-AppRegistry.registerComponent('RCTWebRTCDemo', () => RCTWebRTCDemo);
+export default WebRTC;
